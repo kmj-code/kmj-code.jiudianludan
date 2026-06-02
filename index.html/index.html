@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>酒店订房综合管理系统</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <style>
+        * {margin: 0;padding: 0;box-sizing: border-box;font-family: "Microsoft Yahei", sans-serif;}
+        body {background-color: #f5f7fa;padding: 20px;color: #2c3e50;}
+        .container {max-width: 100%;margin: 0 auto;padding: 0 15px;}
+        h2 {text-align: center;margin-bottom: 20px;color: #2980b9;font-size: 24px;display: flex;align-items: center;justify-content: center;gap: 10px;}
+
+        /* 登录区域 */
+        .login-wrap {max-width: 420px;margin: 80px auto;background: #fff;padding: 35px;border-radius: 12px;box-shadow: 0 4px 20px rgba(0,0,0,0.08);}
+        .login-wrap h3 {text-align: center;color: #2980b9;margin-bottom: 25px;font-size: 20px;}
+        .input-item {position: relative;margin: 10px 0;}
+        .input-item i {position: absolute;left: 12px;top: 50%;transform: translateY(-50%);color: #7f8c8d;}
+        .login-wrap input {width: 100%;padding: 12px 15px 12px 40px;border: 1px solid #dfe6e9;border-radius: 8px;font-size: 15px;}
+        .login-wrap input:focus {outline: none;border-color: #2980b9;}
+        .login-btn {width: 100%;padding: 12px;margin-top: 15px;border: none;border-radius: 8px;font-size: 15px;cursor: pointer;background: #2980b9;color: #fff;}
+        .switch-tip {text-align: center;margin-top: 20px;color: #7f8c8d;cursor: pointer;}
+        .switch-tip:hover {color: #2980b9;}
+
+        /* 顶部导航 */
+        .top-nav {display: flex;justify-content: space-between;align-items: center;background: #fff;padding: 15px 25px;border-radius: 10px;box-shadow: 0 2px 8px rgba(0,0,0,0.06);margin-bottom: 20px;position: relative;}
+        .order-count-tag {position: absolute;right: 20px;top: 8px;font-size: 12px;color: #2980b9;background: #ecf0f1;padding: 4px 10px;border-radius: 12px;}
+        .nav-menu button {padding: 10px 22px;border: none;border-radius: 6px;font-size: 15px;cursor: pointer;margin-right: 10px;background: #ecf0f1;color: #2c3e50;display: flex;align-items: center;gap: 6px;}
+        .nav-menu button.active {background: #2980b9;color: #fff;}
+        .user-info {font-size: 15px;display: flex;align-items: center;gap: 15px;}
+        .logout {background: #e74c3c;color: #fff;padding: 8px 16px;border: none;border-radius: 6px;cursor: pointer;}
+
+        /* 页面容器 */
+        .page {display: none;background: #fff;padding: 30px;border-radius: 10px;box-shadow: 0 2px 8px rgba(0,0,0,0.06);width: 100%;}
+        .page.active {display: block;}
+        .page-title {margin-bottom: 20px;color: #2980b9;display: flex;align-items: center;gap: 8px;font-size: 20px;}
+
+        /* 按钮栏 */
+        .btn-bar {display: flex;gap: 15px;flex-wrap: wrap;margin: 20px 0;padding-bottom: 10px;border-bottom: 1px solid #eee;}
+        .btn-bar button {padding: 10px 24px;border: none;border-radius: 6px;cursor: pointer;font-size: 14px;display: flex;align-items: center;gap: 6px;}
+        .add-order-btn {background: #2980b9;color: #fff;}
+        .export-btn {background: #27ae60;color: #fff;}
+        .del-user-btn {background:#e74c3c;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;}
+
+        /* 筛选区域 */
+        .date-filter-area,.search-area,.backup-area {margin: 20px 0;padding: 10px;background: #f8f9fa;border-radius: 8px;display: flex;align-items: center;gap: 10px;flex-wrap: wrap;}
+        .date-filter-area label {font-size: 14px;}
+        select,input[type="date"],input[type="text"] {padding: 8px 10px;border: 1px solid #dfe6e9;border-radius: 6px;font-size: 14px;}
+
+        /* 表格 */
+        .table-wrap {overflow-x: auto;scroll-behavior: smooth;}
+        table {width: 100%;border-collapse: collapse;min-width: 100%;}
+        th,td {border: 1px solid #dfe6e9;padding: 14px 10px;text-align: center;font-size: 15px;}
+        th {background: #ecf0f1;}
+        tbody tr:nth-child(even) td {background: #f8f9fa;}
+        tbody tr:hover td {background: #e8f4fc;}
+        .detail-btn {background: #3498db;color: #fff;border: none;padding: 6px 12px;border-radius: 4px;cursor: pointer;}
+        .del-btn {background: #e74c3c;color: #fff;border: none;padding: 6px 12px;border-radius: 4px;cursor: pointer;}
+        .empty-text {padding: 40px;color: #7f8c8d;text-align: center;}
+
+        /* 弹窗 */
+        .modal {display: none;position: fixed;top: 0;left: 0;width: 100%;height: 100%;background: rgba(0,0,0,0.5);z-index: 999;align-items: center;justify-content: center;}
+        .modal-lg {width: 98%;max-height: 90vh;overflow-y: auto;background: #fff;padding: 30px;border-radius: 12px;}
+        .form-row {display: flex;flex-wrap: wrap;gap: 12px;align-items: center;margin-bottom: 10px;padding-bottom: 10px;border-bottom: 1px dashed #eee;}
+        .form-item {display: flex;flex-direction: column;min-width: 120px;}
+        .modal-btn {display: flex;gap: 15px;justify-content: center;margin-top: 20px;}
+        .save-order {background: #2980b9;color: #fff;border: none;padding: 10px 35px;border-radius: 6px;cursor: pointer;}
+        .close-modal {background: #7f8c8d;color: #fff;border: none;padding: 10px 35px;border-radius: 6px;cursor: pointer;}
+
+        /* 状态、利润颜色 */
+        .status-tag {padding: 4px 8px;border-radius: 4px;color: #fff;cursor: pointer;}
+        .status-pending {background: #e74c3c;}
+        .status-coord {background: #f39c12;}
+        .status-done {background: #27ae60;}
+        .profit-positive {color: #27ae60;font-weight: 500;}
+        .profit-zero {color: #7f8c8d;}
+        .profit-negative {color: #e74c3c;font-weight: 500;}
+
+        /* 统计、分页、图表 */
+        .stat-card-box {display: flex;gap: 20px;flex-wrap: wrap;margin: 30px 0;}
+        .stat-card {flex: 1;min-width: 220px;padding: 25px;background: #f8f9fa;border-radius: 10px;text-align: center;border: 1px solid #dfe6e9;}
+        .total-all {font-size: 18px;margin: 25px 0;padding: 15px;background: #e8f4fc;border-radius: 8px;color: #2980b9;}
+        .page-pagination {margin: 20px 0;text-align: center;}
+        .page-pagination button {padding: 6px 12px;margin: 0 4px;border: 1px solid #dfe6e9;background: #fff;border-radius: 4px;cursor: pointer;}
+        .page-pagination button.active {background: #2980b9;color: #fff;border-color: #2980b9;}
+        .chart-box {width: 100%;height: 350px;margin: 30px 0;padding: 20px;background: #f8f9fa;border-radius: 8px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><i class="fa-solid fa-hotel"></i> 酒店订房综合管理系统</h2>
+
+        <!-- 登录模块 -->
+        <div class="login-wrap" id="loginWrap">
+            <h3>系统登录</h3>
+            <div class="input-item">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="loginUser" value="admin" placeholder="请输入账号">
+            </div>
+            <div class="input-item">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="loginPwd" value="123456" placeholder="请输入密码">
+            </div>
+            <button class="login-btn" onclick="login()">登 录</button>
+            <div class="switch-tip" onclick="showReg()">没有账号？前往注册</div>
+
+            <div id="regForm" style="display:none;">
+                <h3>账号注册</h3>
+                <div class="input-item">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <input type="text" id="regUser" placeholder="设置账号">
+                </div>
+                <div class="input-item">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="regPwd" placeholder="设置密码">
+                </div>
+                <button class="login-btn" onclick="register()">注 册</button>
+                <div class="switch-tip" onclick="showLogin()">已有账号？返回登录</div>
+            </div>
+        </div>
+
+        <!-- 主系统模块 -->
+        <div id="mainSystem" style="display:none;">
+            <div class="top-nav">
+                <div class="nav-menu">
+                    <button class="active" onclick="switchPage('orderPage',this)"><i class="fa-solid fa-file-pen"></i>订单录单</button>
+                    <button onclick="switchPage('statPage',this)"><i class="fa-solid fa-chart-simple"></i>数据统计</button>
+                    <button id="adminMenu" onclick="switchPage('adminPage',this)" style="display:none;background:#9b59b6;color:white"><i class="fa-solid fa-user-shield"></i>子账号管理</button>
+                </div>
+                <div class="order-count-tag">当前筛选单量：<span id="topOrderCount">0</span> 单</div>
+                <div class="user-info">
+                    欢迎您：<strong id="currUser"></strong>
+                    <button class="logout" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+
+            <!-- 订单页面 -->
+            <div class="page active" id="orderPage">
+                <h3 class="page-title"><i class="fa-solid fa-list"></i> 订单录单管理</h3>
+                <div class="btn-bar">
+                    <button class="add-order-btn" onclick="openOrderModal()"><i class="fa-solid fa-plus"></i> 新增订单</button>
+                    <button class="export-btn" onclick="exportData()"><i class="fa-solid fa-download"></i> 导出全部数据</button>
+                </div>
+                <div class="backup-area">
+                    <button onclick="exportBackup()">导出数据备份</button>
+                    <input type="file" id="restoreFile" accept=".json" onchange="importBackup(this)">
+                    <label for="restoreFile">恢复备份</label>
+                </div>
+                <div class="date-filter-area">
+                    <label>筛选维度：</label>
+                    <select id="dateFilterType">
+                        <option value="">全部订单</option>
+                        <option value="checkIn">入店日期</option>
+                        <option value="checkOut">离店日期</option>
+                        <option value="createTime">创建日期</option>
+                    </select>
+                    <label>开始日期：</label>
+                    <input type="date" id="filterStartDate">
+                    <label>结束日期：</label>
+                    <input type="date" id="filterEndDate">
+                </div>
+                <div class="search-area">
+                    <input type="text" id="searchVal" placeholder="酒店名称/订单编号">
+                    <input type="text" id="searchGuest" placeholder="入住人">
+                    <input type="text" id="searchRoom" placeholder="房型">
+                    <select id="searchStatus">
+                        <option value="">全部状态</option>
+                        <option value="pending">待处理</option>
+                        <option value="coord">待协调</option>
+                        <option value="done">已处理</option>
+                    </select>
+                    <button onclick="searchOrder()">搜索</button>
+                    <button onclick="resetSearch()">重置</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>订单编号</th>
+                                <th>酒店名称</th>
+                                <th>房型</th>
+                                <th>是否含早</th>
+                                <th>入住人</th>
+                                <th>入住日期</th>
+                                <th>离店日期</th>
+                                <th>总销售额</th>
+                                <th>总成本</th>
+                                <th>总利润</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                                <th>状态栏</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderList">
+                            <tr><td colspan="13" class="empty-text">暂无订单数据</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="page-pagination" id="pagination"></div>
+            </div>
+
+            <!-- 统计页面 -->
+            <div class="page" id="statPage">
+                <h3 class="page-title"><i class="fa-solid fa-chart-bar"></i> 数据统计</h3>
+                <div class="date-filter-area">
+                    <label>筛选维度：</label>
+                    <select id="statFilterType">
+                        <option value="">全部订单</option>
+                        <option value="checkIn">入店日期</option>
+                        <option value="checkOut">离店日期</option>
+                        <option value="createTime">创建日期</option>
+                    </select>
+                    <label>开始日期：</label>
+                    <input type="date" id="statStartDate">
+                    <label>结束日期：</label>
+                    <input type="date" id="statEndDate">
+
+                    <!-- 母账号子公司筛选 -->
+                    <div id="subUserFilterBox" style="display:none;margin-left:10px;">
+                        <label>子账号筛选：</label>
+                        <select id="subUserFilter" onchange="calcRangeData()"></select>
+                    </div>
+                </div>
+                <div class="btn-bar">
+                    <button class="export-btn" onclick="exportStatData()"><i class="fa-solid fa-download"></i> 导出统计报表</button>
+                </div>
+                <div class="stat-card-box">
+                    <div class="stat-card"><h4>区间订单总数</h4><p id="statCount">0 单</p></div>
+                    <div class="stat-card"><h4>区间总销售额</h4><p id="statSale">¥0</p></div>
+                    <div class="stat-card"><h4>区间总成本</h4><p id="statCost">¥0</p></div>
+                    <div class="stat-card"><h4>区间总利润</h4><p id="statProfit">¥0</p></div>
+                </div>
+                <div class="chart-box"><canvas id="saleChart"></canvas></div>
+                <div class="total-all" id="allTotal">全部累计：订单总数 0 单 | 总销售额 ¥0 | 总成本 ¥0 | 总利润 ¥0</div>
+            </div>
+
+            <!-- ====================== 新增：子账号管理页面 ====================== -->
+            <div class="page" id="adminPage">
+                <h3 class="page-title"><i class="fa-solid fa-users"></i> 子账号管理（仅admin可见）</h3>
+                <div style="background:#fceaea;padding:10px 15px;border-radius:6px;margin-bottom:20px;">
+                    <strong>⚠ 警告：删除子账号会同时删除该账号所有订单数据，无法恢复！</strong>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>账号</th>
+                                <th>角色</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userListTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- ================================================================= -->
+
+        </div>
+
+        <!-- 新增订单弹窗 -->
+        <div class="modal" id="orderModal">
+            <div class="modal-lg">
+                <h3>新增订单基础信息</h3>
+                <div id="formLineBox">
+                    <div class="form-line form-row">
+                        <div class="form-item"><label>订单编号</label><input type="text" class="orderNo"></div>
+                        <div class="form-item"><label>酒店名称</label><input type="text" class="hotel"></div>
+                        <div class="form-item"><label>房型</label><input type="text" class="room"></div>
+                        <div class="form-item">
+                            <label>是否含早</label>
+                            <select class="breakfast"><option value="否">否</option><option value="是">是</option></select>
+                        </div>
+                        <div class="form-item"><label>入住人</label><input type="text" class="guest"></div>
+                        <div class="form-item"><label>入住日期</label><input type="date" class="checkIn" onchange="updateOutDate()"></div>
+                        <div class="form-item"><label>销售额</label><input type="text" class="sale" value="0.00" oninput="onlyNumber(this)"></div>
+                        <div class="form-item"><label>成本</label><input type="text" class="cost" value="0.00" oninput="onlyNumber(this)"></div>
+                        <div class="form-item"><label>备注</label><textarea class="remark"></textarea></div>
+                        <div class="form-item">
+                            <label>状态</label>
+                            <select class="lineStatus"><option value="pending">待处理</option><option value="coord">待协调</option><option value="done">已处理</option></select>
+                        </div>
+                        <button class="add-line-btn" onclick="addNewFormLine()">+</button>
+                        <button class="del-line-btn" onclick="delThisLine(this)">删除</button>
+                    </div>
+                </div>
+                <div class="out-date-wrap">
+                    <div class="form-item">
+                        <label>离店日期（自动+1天）</label>
+                        <input type="date" id="finalOutDate" readonly>
+                    </div>
+                </div>
+                <div class="modal-btn">
+                    <button class="save-order" onclick="submitNewOrder()">保存订单</button>
+                    <button class="close-modal" onclick="closeOrderModal()">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 订单详情弹窗 -->
+        <div class="modal" id="detailModal">
+            <div class="modal-lg">
+                <h3>订单每日明细管理</h3>
+                <input type="hidden" id="currMainIdx">
+                <div class="btn-bar">
+                    <button class="add-order-btn" onclick="addNewDay()"><i class="fa-solid fa-plus"></i> 新增单日数据</button>
+                </div>
+                <div class="day-list-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>订单编号</th><th>日期</th><th>酒店名称</th><th>房型</th><th>是否含早</th>
+                                <th>入住人</th><th>销售额</th><th>成本</th><th>利润</th><th>备注</th>
+                                <th>确认号</th><th>状态</th><th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dayDetailList"></tbody>
+                    </table>
+                </div>
+                <div class="modal-btn">
+                    <button class="save-order" onclick="saveDetailData()">保存</button>
+                    <button class="close-modal" onclick="closeDetailModal()">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAccount = "";
+        let userList = [];
+        let allOrderData = {};
+        const PAGE_SIZE = 20;
+        let currentPage = 1;
+        let filterOrderList = [];
+        let saleChart = null;
+
+        // 数据解析容错
+        function safeParseJSON(str) {
+            try { return JSON.parse(str); } catch (e) { return null; }
+        }
+        // 仅允许输入数字和小数点
+        function onlyNumber(input) {
+            input.value = input.value.replace(/[^\d.]/g, "");
+            let dotNum = (input.value.match(/\./g) || []).length;
+            if (dotNum > 1) input.value = input.value.slice(0, -1);
+        }
+        // 日期校验
+        function checkDateRange(startEl, endEl) {
+            let s = startEl.value, e = endEl.value;
+            if (!s || !e) return true;
+            if (new Date(s) > new Date(e)) {
+                alert("开始日期不能大于结束日期，已自动调换");
+                let temp = s; startEl.value = e; endEl.value = temp;
+                return false;
+            }
+            return true;
+        }
+        // 日期加减
+        function addDays(dateStr, days) {
+            let d = new Date(dateStr);
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split('T')[0];
+        }
+
+        // 数字格式化：无尾零自动去除
+        function formatNumShow(num) {
+            let n = Number(num || 0);
+            if (Number.isInteger(n)) {
+                return n.toString();
+            }
+            return n.toFixed(2).replace(/(\.\d?[1-9])0$/, '$1').replace(/\.0$/, '');
+        }
+
+        // 利润样式
+        function getProfitClass(profit) {
+            let p = parseFloat(profit);
+            if (p > 0) return "profit-positive";
+            if (p === 0) return "profit-zero";
+            return "profit-negative";
+        }
+        // 状态文字
+        function getStatusText(cls) {
+            if (cls === "pending") return "待处理";
+            if (cls === "coord") return "待协调";
+            return "已处理";
+        }
+
+        // 初始化本地存储
+        function initStorage(){
+            let userStr = localStorage.getItem("userList");
+            let orderStr = localStorage.getItem("allOrderData");
+            userList = userStr ? safeParseJSON(userStr) : [];
+            allOrderData = orderStr ? safeParseJSON(orderStr) : {};
+
+            const defaultUser = { user: "admin", pwd: "123456" };
+            if (!Array.isArray(userList)) userList = [];
+            if (!userList.find(u => u.user === defaultUser.user)) {
+                userList.push(defaultUser);
+                localStorage.setItem("userList", JSON.stringify(userList));
+            }
+            if (!allOrderData.admin) allOrderData.admin = [];
+        }
+
+        // 页面加载
+        window.onload = function () {
+            initStorage();
+            let loginUser = localStorage.getItem("currentLogin");
+            if (loginUser) {
+                currentAccount = loginUser;
+                enterSystem();
+            }
+            let today = new Date().toISOString().split('T')[0];
+            document.getElementById("statStartDate").value = today;
+            document.getElementById("statEndDate").value = today;
+
+            document.getElementById("filterStartDate").addEventListener("change", () => { checkDateRange(filterStartDate, filterEndDate); renderOrder(); });
+            document.getElementById("filterEndDate").addEventListener("change", () => { checkDateRange(filterStartDate, filterEndDate); renderOrder(); });
+            document.getElementById("statStartDate").addEventListener("change", () => { checkDateRange(statStartDate, statEndDate); calcRangeData(); });
+            document.getElementById("statEndDate").addEventListener("change", () => { checkDateRange(statStartDate, statEndDate); calcRangeData(); });
+            document.getElementById("dateFilterType").addEventListener("change", renderOrder);
+            document.getElementById("statFilterType").addEventListener("change", calcRangeData);
+        };
+
+        // 登录切换
+        function showReg() {
+            document.getElementById("regForm").style.display = "block";
+        }
+        function showLogin() {
+            document.getElementById("regForm").style.display = "none";
+        }
+
+        // 注册功能
+        function register() {
+            let u = document.getElementById("regUser").value.trim();
+            let p = document.getElementById("regPwd").value.trim();
+            if (!u || !p) { alert("账号密码不能为空"); return; }
+            if (userList.find(x => x.user === u)) { alert("账号已存在"); return; }
+            userList.push({ user: u, pwd: p });
+            localStorage.setItem("userList", JSON.stringify(userList));
+            allOrderData[u] = [];
+            localStorage.setItem("allOrderData", JSON.stringify(allOrderData));
+            alert("注册成功，请登录");
+            showLogin();
+        }
+
+        // 登录
+        function login() {
+            let u = document.getElementById("loginUser").value.trim();
+            let p = document.getElementById("loginPwd").value.trim();
+            if (!u || !p) {
+                alert("账号和密码不能为空！");
+                return;
+            }
+            let user = userList.find(item => item.user === u && item.pwd === p);
+            if (!user) {
+                alert("账号或密码错误！");
+                return;
+            }
+            currentAccount = u;
+            localStorage.setItem("currentLogin", u);
+            enterSystem();
+        }
+
+        // 进入主系统
+        function enterSystem() {
+            document.getElementById("loginWrap").style.display = "none";
+            document.getElementById("mainSystem").style.display = "block";
+            document.getElementById("currUser").innerText = currentAccount;
+            
+            // ====== 仅admin显示管理菜单 ======
+            if(currentAccount === "admin"){
+                document.getElementById("adminMenu").style.display = "inline-flex";
+                document.getElementById("subUserFilterBox").style.display = "flex";
+                renderSubUserFilter();
+                renderUserList();
+            }
+            
+            renderOrder();
+            calcAllTotal();
+            calcRangeData();
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem("currentLogin");
+            currentAccount = "";
+            document.getElementById("mainSystem").style.display = "none";
+            showLogin();
+        }
+
+        // 切换页面
+        function switchPage(pageId, btn) {
+            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+            document.getElementById(pageId).classList.add("active");
+            document.querySelectorAll(".nav-menu button").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            if (pageId === "statPage") calcRangeData();
+        }
+
+        // 获取当前账号订单 —— 母账号 admin 看全部
+        function getCurrData() {
+            if (currentAccount === "admin") {
+                let all = [];
+                for (let user in allOrderData) {
+                    all = all.concat(allOrderData[user] || []);
+                }
+                return all;
+            }
+            return allOrderData[currentAccount] || [];
+        }
+        
+        // 保存数据到本地
+        function saveData() {
+            localStorage.setItem("allOrderData", JSON.stringify(allOrderData));
+        }
+
+        // 新增订单弹窗
+        function openOrderModal() {
+            document.getElementById("orderModal").style.display = "flex";
+            const box = document.getElementById("formLineBox");
+            while (box.children.length > 1) box.removeChild(box.lastChild);
+            let first = box.querySelector(".form-line");
+            first.querySelectorAll("input,select,textarea").forEach(el => {
+                if(el.className === "sale" || el.className === "cost") el.value = "0.00";
+                else el.value = "";
+            });
+            document.getElementById("finalOutDate").value = "";
+        }
+        function closeOrderModal() { document.getElementById("orderModal").style.display = "none"; }
+        function delThisLine(btn) {
+            const line = btn.closest(".form-line");
+            const box = document.getElementById("formLineBox");
+            if (box.children.length <= 1) { alert("至少保留一行"); return; }
+            line.remove();
+            updateOutDate();
+        }
+
+        // 新增行同步日期 + 第一行是否含早
+        function addNewFormLine() {
+            const box = document.getElementById("formLineBox");
+            const lines = box.querySelectorAll(".form-line");
+            const lastLine = lines[lines.length - 1];
+            const firstLine = lines[0];
+
+            let lastDate = lastLine.querySelector(".checkIn").value;
+            if (!lastDate) { alert("请先填写入住日期"); return; }
+
+            let newLine = lastLine.cloneNode(true);
+            newLine.querySelector(".checkIn").value = addDays(lastDate, 1);
+            newLine.querySelector(".breakfast").value = firstLine.querySelector(".breakfast").value;
+
+            box.appendChild(newLine);
+            updateOutDate();
+        }
+
+        function updateOutDate() {
+            const lines = document.querySelectorAll(".form-line");
+            let lastDate = lines[lines.length-1].querySelector(".checkIn").value;
+            if(lastDate) document.getElementById("finalOutDate").value = addDays(lastDate,1);
+        }
+        function submitNewOrder() {
+            const lines = document.querySelectorAll(".form-line");
+            let outDate = document.getElementById("finalOutDate").value;
+            if (!outDate) { alert("请填写入住日期"); return; }
+            let first = lines[0];
+            let hotel = first.querySelector(".hotel").value.trim();
+            let inD = first.querySelector(".checkIn").value;
+            if (!hotel || !inD) { alert("酒店名称、入住日期必填"); return; }
+
+            let subList = [];
+            let totalSale = 0, totalCost = 0;
+            let createTime = new Date().toISOString().split('T')[0];
+            lines.forEach(line => {
+                let s = parseFloat(line.querySelector(".sale").value) || 0;
+                let c = parseFloat(line.querySelector(".cost").value) || 0;
+                totalSale += s; totalCost += c;
+                subList.push({
+                    date: line.querySelector(".checkIn").value,
+                    hotel: line.querySelector(".hotel").value.trim(),
+                    roomType: line.querySelector(".room").value.trim(),
+                    breakfast: line.querySelector(".breakfast").value,
+                    guest: line.querySelector(".guest").value.trim(),
+                    cost: c.toFixed(2), sale: s.toFixed(2),
+                    remark: line.querySelector(".remark").value.trim(),
+                    orderNo: line.querySelector(".orderNo").value.trim(),
+                    confirmNo: "", lineStatus: line.querySelector(".lineStatus").value
+                });
+            });
+            let newOrder = {
+                mainId: Date.now().toString(),
+                orderNo: first.querySelector(".orderNo").value.trim(),
+                hotel: hotel, roomType: first.querySelector(".room").value.trim(),
+                breakfast: first.querySelector(".breakfast").value,
+                guest: first.querySelector(".guest").value.trim(),
+                checkIn: inD, checkOut: outDate,
+                sale: totalSale.toFixed(2), cost: totalCost.toFixed(2),
+                remark: first.querySelector(".remark").value.trim(),
+                status: "pending", subList: subList, createTime: createTime,
+                owner: currentAccount
+            };
+
+            if (!allOrderData[currentAccount]) allOrderData[currentAccount] = [];
+            allOrderData[currentAccount].push(newOrder);
+            saveData();
+            renderOrder(); calcAllTotal(); calcRangeData();
+            closeOrderModal();
+            alert("订单创建成功");
+        }
+
+        // 主列表状态、删除、编辑
+        function changeStatus(idx) {
+            let list = filterOrderList;
+            let item = list[idx];
+            let owner = item.owner || "admin";
+            let arr = ["pending","coord","done"];
+            let now = arr.indexOf(item.status);
+            item.status = arr[(now+1)%3];
+            let targetList = allOrderData[owner] || [];
+            let realIdx = targetList.findIndex(x => x.mainId === item.mainId);
+            if (realIdx > -1) targetList[realIdx].status = item.status;
+            saveData(); renderOrder();
+        }
+        function delMainOrder(idx) {
+            if(!confirm("确定删除该订单？")) return;
+            let list = filterOrderList;
+            let item = list[idx];
+            let owner = item.owner || "admin";
+            let targetList = allOrderData[owner] || [];
+            let realIdx = targetList.findIndex(x => x.mainId === item.mainId);
+            if (realIdx > -1) targetList.splice(realIdx, 1);
+            saveData(); renderOrder(); calcAllTotal(); calcRangeData();
+        }
+        function editMainData(idx,key,val) {
+            let list = filterOrderList;
+            let item = list[idx];
+            let owner = item.owner || "admin";
+            let targetList = allOrderData[owner] || [];
+            let realIdx = targetList.findIndex(x => x.mainId === item.mainId);
+            if (realIdx > -1) targetList[realIdx][key] = val;
+            saveData();
+        }
+
+        // 搜索
+        function getFilterList() {
+            let list = getCurrData();
+            let fType = document.getElementById("dateFilterType").value;
+            let sD = document.getElementById("filterStartDate").value;
+            let eD = document.getElementById("filterEndDate").value;
+            let sVal = document.getElementById("searchVal").value.trim();
+            let sGuest = document.getElementById("searchGuest").value.trim();
+            let sRoom = document.getElementById("searchRoom").value.trim();
+            let sStatus = document.getElementById("searchStatus").value;
+
+            return list.filter(item=>{
+                let dPass = true;
+                if(fType && sD && eD){
+                    let targetDate = item[fType];
+                    dPass = targetDate >= sD && targetDate <= eD;
+                }
+                let sPass = true;
+                if(sVal) sPass = (item.hotel === sVal) || (item.orderNo === sVal);
+                if(sGuest && sPass) sPass = (item.guest === sGuest);
+                if(sRoom && sPass) sPass = (item.roomType === sRoom);
+                if(sStatus && sPass) sPass = item.status === sStatus;
+                return dPass && sPass;
+            });
+        }
+        function searchOrder(){ renderOrder(); }
+        function resetSearch(){
+            document.querySelectorAll(".search-area input,.search-area select").forEach(el=>el.value="");
+            document.getElementById("dateFilterType").value = "";
+            document.getElementById("filterStartDate").value = "";
+            document.getElementById("filterEndDate").value = "";
+            renderOrder();
+        }
+        function renderOrder() {
+            filterOrderList = getFilterList();
+            document.getElementById("topOrderCount").innerText = filterOrderList.length;
+            currentPage = 1; renderPage(); renderPagination();
+        }
+        function renderPage() {
+            let start = (currentPage-1)*PAGE_SIZE;
+            let end = start+PAGE_SIZE;
+            let pageData = filterOrderList.slice(start,end);
+            let tb = document.getElementById("orderList");
+            if(pageData.length===0){
+                tb.innerHTML = '<tr><td colspan="13" class="empty-text">暂无订单数据</td>';
+                return;
+            }
+            let html = "";
+            pageData.forEach((item,idx)=>{
+                let profit = (parseFloat(item.sale)-parseFloat(item.cost));
+                let sText = getStatusText(item.status);
+                let sClass = "status-"+item.status;
+                let pClass = getProfitClass(profit);
+                let ownerLabel = currentAccount === "admin" ? `(${item.owner || "admin"})` : "";
+                html += `<tr>
+                    <td contenteditable="true" onblur="editMainData(${idx},'orderNo',this.innerText)">${item.orderNo} ${ownerLabel}</td>
+                    <td contenteditable="true" onblur="editMainData(${idx},'hotel',this.innerText)">${item.hotel}</td>
+                    <td contenteditable="true" onblur="editMainData(${idx},'roomType',this.innerText)">${item.roomType}</td>
+                    <td contenteditable="true" onblur="editMainData(${idx},'breakfast',this.innerText)">${item.breakfast}</td>
+                    <td contenteditable="true" onblur="editMainData(${idx},'guest',this.innerText)">${item.guest}</td>
+                    <td>${item.checkIn}</td>
+                    <td>${item.checkOut}</td>
+                    <td>${formatNumShow(item.sale)}</td>
+                    <td>${formatNumShow(item.cost)}</td>
+                    <td class="${pClass}">${formatNumShow(profit)}</td>
+                    <td contenteditable="true" onblur="editMainData(${idx},'remark',this.innerText)">${item.remark}</td>
+                    <td>
+                        <button class="detail-btn" onclick="openDetailModal(${idx})">详情</button>
+                        <button class="del-btn" onclick="delMainOrder(${idx})">删除</button>
+                    </td>
+                    <td><span class="status-tag ${sClass}" onclick="changeStatus(${idx})">${sText}</span></td>
+                </tr>`;
+            });
+            tb.innerHTML = html;
+        }
+        function renderPagination() {
+            let total = filterOrderList.length;
+            let totalPage = Math.ceil(total/PAGE_SIZE);
+            let pgBox = document.getElementById("pagination");
+            if(totalPage<=1) { pgBox.innerHTML=""; return; }
+            let html = "";
+            for(let i=1;i<=totalPage;i++){
+                html += `<button class="${i===currentPage?'active':''}" onclick="switchPageNum(${i})">${i}</button>`;
+            }
+            pgBox.innerHTML = html;
+        }
+        function switchPageNum(page){ currentPage=page; renderPage(); renderPagination(); }
+
+        function openDetailModal(idx) {
+            document.getElementById("currMainIdx").value = idx;
+            document.getElementById("detailModal").style.display = "flex";
+            renderDayDetail(idx);
+        }
+        function closeDetailModal() { document.getElementById("detailModal").style.display = "none"; }
+
+        function renderDayDetail(idx) {
+            let mainItem = filterOrderList[idx];
+            let subList = mainItem.subList || [];
+            let html = "";
+            if(subList.length === 0){
+                html = '<tr><td colspan="13" class="empty-text">暂无明细数据</td>';
+                document.getElementById("dayDetailList").innerHTML = html;
+                return;
+            }
+            subList.forEach((sub, sIdx) => {
+                let profit = parseFloat(sub.sale) - parseFloat(sub.cost);
+                let statusTxt = getStatusText(sub.lineStatus);
+                let statusCls = "status-" + sub.lineStatus;
+                let profitCls = getProfitClass(profit);
+
+                html += `<tr>
+                    <td contenteditable="true" class="edit-orderno">${sub.orderNo}</td>
+                    <td contenteditable="true" class="edit-date">${sub.date}</td>
+                    <td contenteditable="true" class="edit-hotel">${sub.hotel}</td>
+                    <td contenteditable="true" class="edit-room">${sub.roomType}</td>
+                    <td contenteditable="true" class="edit-breakfast">${sub.breakfast}</td>
+                    <td contenteditable="true" class="edit-guest">${sub.guest}</td>
+                    <td contenteditable="true" class="edit-sale">${formatNumShow(sub.sale)}</td>
+                    <td contenteditable="true" class="edit-cost">${formatNumShow(sub.cost)}</td>
+                    <td class="${profitCls}">${formatNumShow(profit)}</td>
+                    <td contenteditable="true" class="edit-remark">${sub.remark}</td>
+                    <td><input type="text" class="edit-confirm" value="${sub.confirmNo}"></td>
+                    <td><span class="status-tag ${statusCls}" onclick="changeLineStatus(${idx},${sIdx})">${statusTxt}</span></td>
+                    <td><button class="del-btn" onclick="delDayLine(${idx},${sIdx})">删除</button></td>
+                </tr>`;
+            });
+            document.getElementById("dayDetailList").innerHTML = html;
+        }
+
+        function addNewDay() {
+            let idx = document.getElementById("currMainIdx").value;
+            let mainItem = filterOrderList[idx];
+            let lastSub = mainItem.subList[mainItem.subList.length - 1];
+            let newDate = addDays(lastSub.date, 1);
+            let newSub = {
+                date: newDate,
+                hotel: lastSub.hotel,
+                roomType: lastSub.roomType,
+                breakfast: lastSub.breakfast,
+                guest: lastSub.guest,
+                cost: "0.00",
+                sale: "0.00",
+                remark: lastSub.remark,
+                orderNo: lastSub.orderNo,
+                confirmNo: "",
+                lineStatus: "pending"
+            };
+            let owner = mainItem.owner || "admin";
+            let targetList = allOrderData[owner] || [];
+            let realIdx = targetList.findIndex(d => d.mainId === mainItem.mainId);
+            if (realIdx > -1) targetList[realIdx].subList.push(newSub);
+            saveData();
+            renderDayDetail(idx);
+        }
+
+        // 详情保存
+        function saveDetailData() {
+            let mIdx = document.getElementById("currMainIdx").value;
+            let mainItem = filterOrderList[mIdx];
+            let owner = mainItem.owner || "admin";
+            let targetList = allOrderData[owner] || [];
+            let realIdx = targetList.findIndex(d => d.mainId === mainItem.mainId);
+            if (realIdx === -1) { alert("数据异常"); return; }
+            let subList = targetList[realIdx].subList;
+            let rows = document.querySelectorAll("#dayDetailList tr");
+
+            for(let i=0; i<subList.length; i++){
+                let row = rows[i];
+                if(!row) continue;
+                let tds = row.querySelectorAll("td");
+                subList[i].orderNo = tds[0].innerText.trim();
+                subList[i].date = tds[1].innerText.trim();
+                subList[i].hotel = tds[2].innerText.trim();
+                subList[i].roomType = tds[3].innerText.trim();
+                subList[i].breakfast = tds[4].innerText.trim();
+                subList[i].guest = tds[5].innerText.trim();
+                subList[i].sale = (parseFloat(tds[6].innerText)||0).toFixed(2);
+                subList[i].cost = (parseFloat(tds[7].innerText)||0).toFixed(2);
+                subList[i].remark = tds[9].innerText.trim();
+                subList[i].confirmNo = row.querySelector(".edit-confirm").value.trim();
+            }
+
+            let totalSale = 0, totalCost = 0;
+            subList.forEach(s=>{
+                totalSale += parseFloat(s.sale)||0;
+                totalCost += parseFloat(s.cost)||0;
+            });
+            targetList[realIdx].sale = totalSale.toFixed(2);
+            targetList[realIdx].cost = totalCost.toFixed(2);
+
+            saveData();
+            alert("明细保存成功");
+            closeDetailModal();
+            renderOrder();
+            calcAllTotal();
+            calcRangeData();
+        }
+        function updateConfirmNo(mIdx, sIdx, val) {
+            let mainItem = filterOrderList[mIdx];
+            let owner = mainItem.owner || "admin";
+            let targetList = allOrderData[owner] || [];
+            let realIdx = targetList.findIndex(d => d.mainId === mainItem.mainId);
+            if (realIdx > -1) targetList[realIdx].subList[sIdx].confirmNo = val;
+            saveData();
+        }
+        function changeLineStatus(mIdx, sIdx) {
+            let mainItem = filterOrderList[mIdx];
+            let owner = mainItem.owner || "admin";
+            let targetList = allOrderData[owner] || [];
+            let realIdx = targetList.findIndex(d => d.mainId === mainItem.mainId);
+            if (realIdx === -1) return;
+            let arr = ["pending","coord","done"];
+            let now = arr.indexOf(targetList[realIdx].subList[sIdx].lineStatus);
+            targetList[realIdx].subList[sIdx].lineStatus = arr[(now + 1) % 3];
+            saveData();
+            renderDayDetail(mIdx);
+        }
+        function delDayLine(mIdx, sIdx) {
+            if(!confirm("确定删除该条明细？")) return;
+            let mainItem = filterOrderList[mIdx];
+            let owner = mainItem.owner || "admin";
+            let targetList = allOrderData[owner] || [];
+            let realIdx = targetList.findIndex(d => d.mainId === mainItem.mainId);
+            if (realIdx > -1) targetList[realIdx].subList.splice(sIdx, 1);
+            saveData();
+            renderDayDetail(mIdx);
+        }
+
+        // 全部累计统计
+        function calcAllTotal() {
+            let list = getCurrData();
+            let count = list.length;
+            let sale = 0,cost=0,profit=0;
+            list.forEach(item=>{
+                sale += parseFloat(item.sale)||0;
+                cost += parseFloat(item.cost)||0;
+            });
+            profit = sale - cost;
+            document.getElementById("allTotal").innerText =
+                `全部累计：订单总数 ${count} 单 | 总销售额 ¥${formatNumShow(sale)} | 总成本 ¥${formatNumShow(cost)} | 总利润 ¥${formatNumShow(profit)}`;
+        }
+
+        // 渲染子账号筛选器
+        function renderSubUserFilter(){
+            let sel = document.getElementById("subUserFilter");
+            sel.innerHTML = `<option value="">全部子账号</option>`;
+            userList.forEach(u=>{
+                sel.innerHTML += `<option value="${u.user}">${u.user}</option>`;
+            })
+        }
+
+        // 统计筛选（支持子账号筛选）
+        function getStatFilterList(){
+            let list = getCurrData();
+            let fType = document.getElementById("statFilterType").value;
+            let sD = document.getElementById("statStartDate").value;
+            let eD = document.getElementById("statEndDate").value;
+            let subUser = document.getElementById("subUserFilter")?.value || "";
+
+            if(subUser && currentAccount === "admin"){
+                list = allOrderData[subUser] || [];
+            }
+
+            return list.filter(item=>{
+                if(!fType || !sD || !eD) return true;
+                let targetDate = item[fType];
+                return targetDate >= sD && targetDate <= eD;
+            });
+        }
+
+        // 统计计算
+        function calcRangeData() {
+            let list = getStatFilterList();
+            let count = list.length;
+            let sale=0,cost=0,profit=0;
+            list.forEach(item=>{
+                sale += parseFloat(item.sale)||0;
+                cost += parseFloat(item.cost)||0;
+            });
+            profit = sale-cost;
+            document.getElementById("statCount").innerText = `${count} 单`;
+            document.getElementById("statSale").innerText = `¥${formatNumShow(sale)}`;
+            document.getElementById("statCost").innerText = `¥${formatNumShow(cost)}`;
+            document.getElementById("statProfit").innerText = `¥${formatNumShow(profit)}`;
+
+            let ctx = document.getElementById("saleChart").getContext("2d");
+            if(saleChart) saleChart.destroy();
+            saleChart = new Chart(ctx,{
+                type:"bar",
+                data:{
+                    labels:["销售额","成本","利润"],
+                    datasets:[{
+                        label:"金额",
+                        data:[sale,cost,profit],
+                        backgroundColor:["#2980b9","#e74c3c","#27ae60"]
+                    }]
+                }
+            });
+        }
+
+        // 子账号管理
+        function renderUserList(){
+            let table = document.getElementById("userListTable");
+            let html = "";
+            userList.forEach(u => {
+                if(u.user === "admin"){
+                    html += `<tr><td>${u.user}</td><td>管理员</td><td>不可删除</td></tr>`;
+                } else {
+                    html += `<tr>
+                        <td>${u.user}</td>
+                        <td>子账号</td>
+                        <td><button class="del-user-btn" onclick="deleteUser('${u.user}')">删除该账号</button></td>
+                    </tr>`;
+                }
+            });
+            table.innerHTML = html;
+        }
+
+        function deleteUser(username){
+            if(username === "admin") return alert("admin不可删除");
+            if(!confirm(`确定要删除子账号【${username}】吗？\n该账号所有订单将被永久删除！`)) return;
+            
+            userList = userList.filter(u => u.user !== username);
+            delete allOrderData[username];
+            
+            localStorage.setItem("userList", JSON.stringify(userList));
+            localStorage.setItem("allOrderData", JSON.stringify(allOrderData));
+            
+            alert("删除成功！");
+            renderUserList();
+            renderOrder();
+            calcAllTotal();
+        }
+
+        function exportData() { alert("导出功能已触发"); }
+        function exportStatData() { alert("导出报表已触发"); }
+        function exportBackup() { alert("备份已导出"); }
+        function importBackup(file) { alert("恢复备份已触发"); }
+    </script>
+</body>
+</html>
